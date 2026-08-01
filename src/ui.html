@@ -1,0 +1,1256 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+    try {
+      window.localStorage.getItem('x')
+    } catch (e) {
+      const store = new Map()
+      const shim = {
+        getItem: (k) => (store.has(k) ? store.get(k) : null),
+        setItem: (k, v) => { store.set(k, String(v)) },
+        removeItem: (k) => { store.delete(k) },
+        clear: () => { store.clear() },
+        key: (i) => Array.from(store.keys())[i] ?? null,
+        get length() { return store.size },
+      }
+      Object.defineProperty(window, 'localStorage', { value: shim, configurable: true })
+    }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --plus-color-bg: #0b1623;
+      --plus-color-bg-secondary: #101e2c;
+      --plus-color-bg-hover: #16253a;
+      --plus-color-bg-brand: #ff9f30;
+      --plus-color-bg-brand-tertiary: rgba(255, 159, 48, 0.16);
+      --plus-color-bg-success-tertiary: rgba(0, 255, 157, 0.16);
+      --plus-color-bg-component-tertiary: rgba(143, 210, 255, 0.16);
+      --plus-color-bg-danger-tertiary: rgba(255, 107, 107, 0.16);
+      --plus-color-text: #f0f0f0;
+      --plus-color-text-secondary: #8b9bb4;
+      --plus-color-text-tertiary: #5f7187;
+      --plus-color-text-onbrand: #0b1623;
+      --plus-color-text-component: #8fd2ff;
+      --plus-color-text-success: #00ff9d;
+      --plus-color-text-danger: #ff6b6b;
+      --plus-color-text-brand: #ff9f30;
+      --plus-color-border: #1c2b3a;
+      --plus-color-border-brand: #ff9f30;
+      --plus-color-shadow: 0 8px 24px rgba(2, 6, 23, 0.24);
+      --plus-color-input-shadow: 0 0 0 2px rgba(255, 159, 48, 0.14);
+      --font-family: "JetBrains Mono", "SFMono-Regular", Roboto, monospace;
+      --spacer-1: 4px;
+      --spacer-2: 8px;
+      --spacer-3: 12px;
+      --spacer-5: 24px;
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --plus-color-bg: #f6f7fb;
+      --plus-color-bg-secondary: #ffffff;
+      --plus-color-bg-hover: #eef2f7;
+      --plus-color-bg-brand: #ff9f30;
+      --plus-color-bg-brand-tertiary: rgba(255, 159, 48, 0.16);
+      --plus-color-bg-success-tertiary: rgba(0, 255, 157, 0.16);
+      --plus-color-bg-component-tertiary: rgba(37, 99, 235, 0.12);
+      --plus-color-bg-danger-tertiary: rgba(180, 35, 24, 0.12);
+      --plus-color-text: #112033;
+      --plus-color-text-secondary: #4f6277;
+      --plus-color-text-tertiary: #6b7f90;
+      --plus-color-text-onbrand: #ffffff;
+      --plus-color-text-component: #2563eb;
+      --plus-color-text-success: #0b7b4f;
+      --plus-color-text-danger: #b42318;
+      --plus-color-text-brand: #d97706;
+      --plus-color-border: #d6dce7;
+      --plus-color-border-brand: #ff9f30;
+      --plus-color-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      --plus-color-input-shadow: 0 0 0 2px rgba(255, 159, 48, 0.2);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--plus-color-bg);
+      color: var(--plus-color-text);
+      font-family: var(--font-family);
+    }
+    #plugin-root {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      background: var(--plus-color-bg);
+    }
+    body { display: block; }
+
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 12px 10px;
+      flex-shrink: 0;
+      background: var(--plus-color-bg-secondary);
+      border-bottom: 1px solid var(--plus-color-border);
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 999px;
+      background: var(--plus-color-bg);
+      color: var(--plus-color-text);
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+    .theme-toggle:hover {
+      background: var(--plus-color-bg-hover);
+      border-color: var(--plus-color-border-brand);
+      transform: translateY(-1px);
+    }
+    .theme-toggle:focus-visible {
+      outline: none;
+      box-shadow: var(--plus-color-input-shadow);
+    }
+    .tab-button {
+      all: unset;
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--plus-color-text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+    .tab-button.active {
+      color: var(--plus-color-text);
+      background: var(--plus-color-bg);
+      border-color: var(--plus-color-border);
+      box-shadow: inset 0 0 0 1px var(--plus-color-border);
+    }
+    .tab-button:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
+
+    .content-area {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .group {
+      border: 1px solid var(--plus-color-border);
+      border-radius: 6px;
+      margin: var(--spacer-2) var(--spacer-3);
+      overflow: hidden;
+    }
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacer-2);
+      padding: var(--spacer-2) var(--spacer-3);
+      background: var(--plus-color-bg-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .group-header:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .chevron {
+      transition: transform 0.15s;
+      font-size: 10px;
+      color: var(--plus-color-text-secondary);
+    }
+    .chevron.open { transform: rotate(90deg); }
+    .color-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--plus-color-border);
+      flex-shrink: 0;
+    }
+    .value-badge {
+      font-family: var(--font-family);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--plus-color-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: none;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: var(--plus-color-text-secondary);
+      padding: 0;
+    }
+    .copy-btn:hover {
+      background: var(--plus-color-bg-hover);
+      color: var(--plus-color-text);
+    }
+    .copy-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+    .type-badge {
+      font-family: var(--font-family);
+      font-size: 10px;
+      color: var(--plus-color-text-tertiary);
+      background: var(--plus-color-bg);
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+    .count-badge {
+      font-family: var(--font-family);
+      font-size: 10px;
+      color: var(--plus-color-text-onbrand);
+      background: var(--plus-color-bg-brand);
+      border-radius: 8px;
+      padding: 1px 6px;
+      min-width: 16px;
+      text-align: center;
+    }
+    .group-body {
+      display: none;
+      padding: var(--spacer-1) 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .group-body.open { display: block; }
+    .var-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacer-2);
+      padding: 4px var(--spacer-3);
+    }
+    .var-row:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .var-radio {
+      flex-shrink: 0;
+    }
+    .var-name {
+      font-family: var(--font-family);
+      font-size: 12px;
+      color: var(--plus-color-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .var-collection {
+      font-family: var(--font-family);
+      font-size: 10px;
+      color: var(--plus-color-text-tertiary);
+    }
+    .alias-tag {
+      font-family: var(--font-family);
+      font-size: 9px;
+      color: var(--plus-color-text-onbrand);
+      background: var(--plus-color-bg-brand);
+      border-radius: 3px;
+      padding: 0px 4px;
+      white-space: nowrap;
+      opacity: 0.75;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .alias-count-tag {
+      font-family: var(--font-family);
+      font-size: 9px;
+      color: var(--plus-color-text-component);
+      background: var(--plus-color-bg-component-tertiary);
+      border-radius: 3px;
+      padding: 1px 5px;
+      white-space: nowrap;
+    }
+    .alias-count-tag.all-aliased {
+      color: var(--plus-color-text-success);
+      background: var(--plus-color-bg-success-tertiary);
+    }
+    .canonical-tag {
+      font-family: var(--font-family);
+      font-size: 9px;
+      color: var(--plus-color-text-success);
+      background: var(--plus-color-bg-success-tertiary);
+      border-radius: 3px;
+      padding: 1px 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .empty-state {
+      font-family: var(--font-family);
+      font-size: 12px;
+      color: var(--plus-color-text-secondary);
+      text-align: center;
+      padding: var(--spacer-5) var(--spacer-3);
+    }
+    .summary {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-secondary);
+      padding: var(--spacer-2) var(--spacer-3);
+    }
+    .apply-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 4px var(--spacer-3) var(--spacer-2);
+    }
+    .apply-row.hidden { display: none; }
+    .detach-btn {
+      font-family: var(--font-family);
+      font-size: 9px;
+      color: var(--plus-color-text-danger);
+      background: none;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 3px;
+      padding: 0px 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .detach-btn:hover {
+      background: var(--plus-color-bg-danger-tertiary);
+    }
+
+    .dedup-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--plus-color-bg-secondary);
+      border-bottom: 1px solid var(--plus-color-border);
+    }
+    .search-row .search-input,
+    .bulk-action-row .rename-mode {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-family);
+      font-size: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 10px;
+      background: var(--plus-color-bg);
+      color: var(--plus-color-text);
+      outline: none;
+    }
+    .search-row .search-input::placeholder {
+      color: var(--plus-color-text-tertiary);
+    }
+    .search-row .search-input:focus,
+    .bulk-action-row .rename-mode:focus {
+      border-color: var(--plus-color-border-brand);
+      box-shadow: var(--plus-color-input-shadow);
+    }
+    .action-button {
+      font-family: var(--font-family);
+      font-size: 12px;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: var(--plus-color-bg-secondary);
+      color: var(--plus-color-text);
+      cursor: pointer;
+    }
+    .action-button:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .plugin-footer {
+      border-top: 1px solid var(--plus-color-border);
+      padding: var(--spacer-2) var(--spacer-3);
+      background: var(--plus-color-bg-secondary);
+    }
+    .search-results-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      padding: 10px 12px 0;
+      background: var(--plus-color-bg-secondary);
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 12px;
+      background: var(--plus-color-bg);
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 8px;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .search-result-item:hover {
+      background: var(--plus-color-bg-hover);
+      border-color: var(--plus-color-border-brand);
+    }
+    .search-result-item.selected {
+      background: var(--plus-color-bg-brand-tertiary);
+      border-color: var(--plus-color-border-brand);
+    }
+    .sr-checkbox {
+      flex-shrink: 0;
+    }
+    .sr-name {
+      font-family: var(--font-family);
+      font-size: 12px;
+      color: var(--plus-color-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sr-value {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-secondary);
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .search-info {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-secondary);
+      padding: var(--spacer-1) var(--spacer-3);
+    }
+    .bulk-actions {
+      border-top: 1px solid var(--plus-color-border);
+      padding: 12px;
+      flex-shrink: 0;
+      background: var(--plus-color-bg);
+      border-radius: 0 0 12px 12px;
+    }
+    .bulk-actions.hidden { display: none; }
+    .bulk-action-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .bulk-action-row:last-child { margin-bottom: 0; }
+    .bulk-action-row label {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-secondary);
+      flex-shrink: 0;
+      min-width: 70px;
+    }
+    .bulk-input {
+      flex: 1;
+      font-family: var(--font-family);
+      font-size: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 10px;
+      background: var(--plus-color-bg);
+      color: var(--plus-color-text);
+      outline: none;
+    }
+    .bulk-input:focus {
+      border-color: var(--plus-color-border-brand);
+      box-shadow: var(--plus-color-input-shadow);
+    }
+    .bulk-action-row .action-button {
+      min-width: 90px;
+    }
+    .action-button {
+      font-family: var(--font-family);
+      font-size: 12px;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--plus-color-bg-secondary);
+      color: var(--plus-color-text);
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .action-button:hover {
+      background: var(--plus-color-bg-hover);
+      border-color: var(--plus-color-border-brand);
+    }
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: var(--plus-color-bg);
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: var(--plus-color-text-secondary);
+      padding: 0;
+      box-shadow: inset 0 0 0 1px var(--plus-color-border);
+      transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .copy-btn:hover {
+      background: var(--plus-color-bg-hover);
+      color: var(--plus-color-text);
+      box-shadow: inset 0 0 0 1px var(--plus-color-border-brand);
+    }
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+    .group {
+      border: 1px solid var(--plus-color-border);
+      border-radius: 14px;
+      margin: 12px;
+      overflow: hidden;
+      background: var(--plus-color-bg);
+      box-shadow: var(--plus-color-shadow);
+    }
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: var(--plus-color-bg-secondary);
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid var(--plus-color-border);
+    }
+    .group-header:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .group-body {
+      display: none;
+      padding: 8px 0 12px;
+      max-height: 260px;
+      overflow-y: auto;
+      background: var(--plus-color-bg);
+    }
+    .group-body.open { display: block; }
+    .var-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--plus-color-border);
+      background: var(--plus-color-bg);
+    }
+    .var-row:hover {
+      background: var(--plus-color-bg-hover);
+    }
+    .var-radio {
+      flex-shrink: 0;
+    }
+    .var-name {
+      font-family: var(--font-family);
+      font-size: 12px;
+      color: var(--plus-color-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .var-collection {
+      font-family: var(--font-family);
+      font-size: 10px;
+      color: var(--plus-color-text-secondary);
+      white-space: nowrap;
+    }
+    .alias-tag,
+    .canonical-tag,
+    .alias-count-tag,
+    .type-badge,
+    .count-badge {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-weight: 600;
+    }
+    .alias-tag {
+      font-size: 10px;
+      color: var(--plus-color-text-secondary);
+      background: var(--plus-color-bg);
+      border: 1px solid var(--plus-color-border);
+    }
+    .alias-count-tag,
+    .canonical-tag {
+      font-size: 10px;
+      color: var(--plus-color-text-onbrand);
+      background: var(--plus-color-bg-brand);
+    }
+    .alias-count-tag.all-aliased,
+    .canonical-tag {
+      color: var(--plus-color-text-success);
+      background: var(--plus-color-bg-success-tertiary);
+    }
+    .type-badge {
+      font-size: 10px;
+      color: var(--plus-color-text-tertiary);
+      background: var(--plus-color-bg);
+      border: 1px solid var(--plus-color-border);
+    }
+    .count-badge {
+      font-size: 10px;
+      color: var(--plus-color-text-onbrand);
+      background: var(--plus-color-bg-brand);
+      min-width: 40px;
+      text-align: center;
+    }
+    .apply-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 16px 14px;
+      gap: 8px;
+      border-top: 1px solid var(--plus-color-border);
+      background: var(--plus-color-bg-secondary);
+    }
+    .apply-row.hidden { display: none; }
+    .detach-btn {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-danger);
+      background: none;
+      border: 1px solid var(--plus-color-border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .detach-btn:hover {
+      background: var(--plus-color-bg-danger-tertiary);
+    }
+    .select-all-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacer-2);
+      padding: var(--spacer-1) var(--spacer-3);
+      border-bottom: 1px solid var(--plus-color-border);
+    }
+    .select-all-row label {
+      font-family: var(--font-family);
+      font-size: 11px;
+      color: var(--plus-color-text-secondary);
+      cursor: pointer;
+    }
+    .column-headers {
+      display: flex;
+      align-items: center;
+      gap: var(--spacer-2);
+      padding: 4px var(--spacer-3);
+      border-bottom: 1px solid var(--plus-color-border);
+      background: var(--plus-color-bg-secondary);
+      flex-shrink: 0;
+    }
+    .col-header {
+      font-family: var(--font-family);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--plus-color-text-secondary);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .col-header:hover {
+      color: var(--plus-color-text);
+    }
+    .col-header.active {
+      color: var(--plus-color-text-brand);
+    }
+    .col-header .sort-arrow {
+      font-size: 8px;
+      opacity: 0;
+    }
+    .col-header.active .sort-arrow {
+      opacity: 1;
+    }
+    .col-cb { width: 16px; flex-shrink: 0; }
+    .col-name { flex: 1; overflow: hidden; }
+    .col-value { width: 80px; flex-shrink: 0; }
+    .col-collection { width: 80px; flex-shrink: 0; }
+    .col-type { width: 50px; flex-shrink: 0; }
+    .col-alias { width: 60px; flex-shrink: 0; }
+    .dedup-col-spacer { width: 36px; flex-shrink: 0; }
+    .group-header .type-badge { width: 50px; text-align: center; box-sizing: border-box; flex-shrink: 0; }
+    .group-header .count-badge { width: 50px; text-align: center; box-sizing: border-box; flex-shrink: 0; }
+    .group-header .alias-count-tag { width: 60px; text-align: center; box-sizing: border-box; flex-shrink: 0; }
+    .alias-placeholder { width: 60px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div id="plugin-root">
+    <div class="tab-bar">
+      <div class="tabs">
+        <button id="tab-bulk-btn" class="tab-button active" type="button">Bulk edit</button>
+        <button id="tab-dedup-btn" class="tab-button" type="button">Deduplicator</button>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light mode">☀</button>
+    </div>
+    <div class="content-area">
+      <div id="tab-bulk" class="tab-panel active">
+        <div class="search-row">
+          <input id="var-search" class="search-input" placeholder="Search by name or value..." type="search">
+        </div>
+        <div class="summary" id="bulk-summary"></div>
+        <div class="column-headers" id="bulk-col-headers">
+          <span class="col-cb"></span>
+          <span class="col-header col-name active" data-col="name">Name <span class="sort-arrow">&#9650;</span></span>
+          <span class="col-header col-value" data-col="value">Value <span class="sort-arrow">&#9650;</span></span>
+          <span class="col-header col-type" data-col="type">Type <span class="sort-arrow">&#9650;</span></span>
+          <span class="col-header col-collection" data-col="collection">Collection <span class="sort-arrow">&#9650;</span></span>
+        </div>
+        <div class="search-results-scroll" id="search-results-scroll">
+          <div id="search-results">
+            <div class="empty-state">Loading variables...</div>
+          </div>
+        </div>
+        <div id="bulk-actions" class="bulk-actions hidden">
+          <div class="bulk-action-row">
+            <label>Rename</label>
+            <select id="rename-mode" class="rename-mode">
+              <option value="replace">Replace</option>
+              <option value="prefix">Prefix</option>
+              <option value="suffix">Suffix</option>
+            </select>
+          </div>
+          <div class="bulk-action-row">
+            <label></label>
+            <input type="text" class="bulk-input" id="rename-input" placeholder="New name...">
+            <button id="rename-btn" class="action-button" type="button">Rename</button>
+          </div>
+          <div class="bulk-action-row">
+            <label>Set value</label>
+            <input type="text" class="bulk-input" id="value-input" placeholder="New value...">
+            <button id="value-btn" class="action-button" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+      <div id="tab-dedup" class="tab-panel">
+        <div class="search-row">
+          <input id="dedup-search" class="search-input" placeholder="Filter by name or value..." type="search">
+        </div>
+        <div class="summary" id="dedup-summary"></div>
+        <div class="column-headers" id="dedup-col-headers-fixed"></div>
+        <div class="dedup-scroll" id="results"></div>
+      </div>
+    </div>
+    <footer class="plugin-footer">
+      <button id="rescan" class="action-button" type="button">Scan</button>
+    </footer>
+  </div>
+
+  <script>
+    function reportHeight() {}
+
+    const tabBulkBtn = document.getElementById('tab-bulk-btn')
+    const tabDedupBtn = document.getElementById('tab-dedup-btn')
+    const tabDedup = document.getElementById('tab-dedup')
+    const tabBulk = document.getElementById('tab-bulk')
+    const rescanBtn = document.getElementById('rescan')
+    const themeToggle = document.getElementById('theme-toggle')
+
+    function applyTheme(theme) {
+      const isLight = theme === 'light'
+      const resolvedTheme = isLight ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', resolvedTheme)
+      document.body.setAttribute('data-theme', resolvedTheme)
+      if (themeToggle) {
+        themeToggle.textContent = isLight ? '☾' : '☀'
+        themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode')
+      }
+      window.localStorage.setItem('plus-theme', resolvedTheme)
+    }
+
+    const storedTheme = window.localStorage.getItem('plus-theme')
+    const initialTheme = storedTheme || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    applyTheme(initialTheme)
+
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
+        applyTheme(currentTheme === 'light' ? 'dark' : 'light')
+      })
+    }
+
+    let currentTab = 'Bulk edit'
+
+    function setTab(tab) {
+      currentTab = tab
+      const isBulk = tab === 'Bulk edit'
+      tabBulk.classList.toggle('active', isBulk)
+      tabDedup.classList.toggle('active', !isBulk)
+      tabBulkBtn.classList.toggle('active', isBulk)
+      tabDedupBtn.classList.toggle('active', !isBulk)
+    }
+
+    tabBulkBtn.addEventListener('click', () => setTab('Bulk edit'))
+    tabDedupBtn.addEventListener('click', () => setTab('Deduplicator'))
+
+    let bulkTotalVars = 0
+
+    rescanBtn.addEventListener('click', () => {
+      parent.postMessage({ pluginMessage: { type: 'scan' } }, '*')
+    })
+
+    let bulkResults = []
+    let selectedIds = new Set()
+    let lastQuery = ''
+
+    let bulkSortCol = 'name'
+    let bulkSortAsc = true
+
+    function sortBulkResults(results) {
+      const col = bulkSortCol
+      const asc = bulkSortAsc
+      return results.slice().sort((a, b) => {
+        let va, vb
+        if (col === 'name') { va = (a.isAlias && a.aliasTargetName ? a.aliasTargetName : a.name).toLowerCase(); vb = (b.isAlias && b.aliasTargetName ? b.aliasTargetName : b.name).toLowerCase() }
+        else if (col === 'value') { va = a.valueLabel.toLowerCase(); vb = b.valueLabel.toLowerCase() }
+        else if (col === 'collection') { va = a.collection.toLowerCase(); vb = b.collection.toLowerCase() }
+        else if (col === 'type') { va = a.resolvedType; vb = b.resolvedType }
+        else { va = a.name.toLowerCase(); vb = b.name.toLowerCase() }
+        if (va < vb) return asc ? -1 : 1
+        if (va > vb) return asc ? 1 : -1
+        return 0
+      })
+    }
+
+    function updateBulkColHeaders() {
+      document.querySelectorAll('#bulk-col-headers .col-header').forEach(h => {
+        const col = h.getAttribute('data-col')
+        h.classList.toggle('active', col === bulkSortCol)
+        const arrow = h.querySelector('.sort-arrow')
+        arrow.innerHTML = bulkSortAsc ? '&#9650;' : '&#9660;'
+      })
+    }
+
+    document.querySelectorAll('#bulk-col-headers .col-header').forEach(h => {
+      h.addEventListener('click', () => {
+        const col = h.getAttribute('data-col')
+        if (bulkSortCol === col) {
+          bulkSortAsc = !bulkSortAsc
+        } else {
+          bulkSortCol = col
+          bulkSortAsc = true
+        }
+        updateBulkColHeaders()
+        renderSearchResults(bulkResults, bulkResults.length, true)
+      })
+    })
+
+    function updateBulkActions() {
+      const panel = document.getElementById('bulk-actions')
+      if (selectedIds.size === 0) {
+        panel.classList.add('hidden')
+      } else {
+        panel.classList.remove('hidden')
+      }
+    }
+
+    let searchTimer = null
+    function doSearch() {
+      const query = document.getElementById('var-search').value || ''
+      lastQuery = query.trim()
+      parent.postMessage({ pluginMessage: { type: 'search-vars', query: lastQuery, searchBy: 'all' } }, '*')
+    }
+
+    document.getElementById('var-search').addEventListener('input', () => {
+      if (searchTimer) clearTimeout(searchTimer)
+      searchTimer = setTimeout(doSearch, 300)
+    })
+
+    function renderSearchResults(results, total, preserveSelection) {
+      const container = document.getElementById('search-results')
+      bulkResults = results || []
+      if (!preserveSelection) selectedIds.clear()
+
+      const stillValidIds = new Set()
+      if (preserveSelection) {
+        for (const r of bulkResults) {
+          if (selectedIds.has(r.id)) stillValidIds.add(r.id)
+        }
+        selectedIds = stillValidIds
+      }
+
+      const bulkSummaryEl = document.getElementById('bulk-summary')
+      if (!results || results.length === 0) {
+        container.innerHTML = '<div class="empty-state">No variables found matching your search.</div>'
+        bulkSummaryEl.textContent = bulkTotalVars + ' variables scanned, 0 results'
+        document.getElementById('bulk-actions').classList.add('hidden')
+        return
+      }
+
+      if (lastQuery) {
+        bulkSummaryEl.textContent = bulkTotalVars + ' variables scanned, ' + results.length + ' result' + (results.length !== 1 ? 's' : '')
+      } else {
+        bulkSummaryEl.textContent = results.length + ' variables scanned'
+      }
+
+      const sorted = sortBulkResults(results)
+
+      let html = ''
+      html += '<div class="select-all-row"><input type="checkbox" id="select-all-cb"><label for="select-all-cb">Select all (' + results.length + ')</label></div>'
+
+      sorted.forEach((v, vi) => {
+        const isChecked = selectedIds.has(v.id)
+        const displayName = v.isAlias && v.aliasTargetName ? v.aliasTargetName : v.name
+        html += '<div class="search-result-item' + (isChecked ? ' selected' : '') + '" data-id="' + v.id + '" data-idx="' + vi + '">'
+        html += '<input type="checkbox" class="sr-checkbox" data-id="' + v.id + '"' + (isChecked ? ' checked' : '') + '>'
+        html += '<span class="sr-name col-name" title="' + escapeHtml(v.name) + '">' + escapeHtml(displayName) + '</span>'
+        const aliasTag = v.isAlias && v.aliasTargetName
+          ? '<span class="alias-tag" title="Alias \u2192 ' + escapeHtml(v.aliasTargetName) + '">\u2192 ' + escapeHtml(v.name) + '</span>'
+          : ''
+        html += aliasTag
+        html += '<span class="sr-value col-value" title="' + escapeHtml(v.valueLabel) + '">' + escapeHtml(v.valueLabel) + '</span>'
+        html += '<span class="type-badge col-type">' + v.resolvedType + '</span>'
+        html += '<span class="var-collection col-collection">' + escapeHtml(v.collection) + '</span>'
+        html += '</div>'
+      })
+
+      container.innerHTML = html
+      updateBulkActions()
+
+      document.getElementById('select-all-cb').addEventListener('change', (e) => {
+        const checked = e.target.checked
+        document.querySelectorAll('.sr-checkbox').forEach(cb => {
+          cb.checked = checked
+          const id = cb.getAttribute('data-id')
+          if (checked) selectedIds.add(id)
+          else selectedIds.delete(id)
+          cb.closest('.search-result-item').classList.toggle('selected', checked)
+        })
+        updateBulkActions()
+      })
+
+      document.querySelectorAll('.sr-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          e.stopPropagation()
+          const id = cb.getAttribute('data-id')
+          if (cb.checked) selectedIds.add(id)
+          else selectedIds.delete(id)
+          cb.closest('.search-result-item').classList.toggle('selected', cb.checked)
+          updateBulkActions()
+        })
+      })
+
+      document.querySelectorAll('.search-result-item').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.tagName === 'INPUT') return
+          const cb = row.querySelector('.sr-checkbox')
+          cb.checked = !cb.checked
+          const id = cb.getAttribute('data-id')
+          if (cb.checked) selectedIds.add(id)
+          else selectedIds.delete(id)
+          row.classList.toggle('selected', cb.checked)
+          updateBulkActions()
+        })
+      })
+    }
+
+    document.getElementById('rename-btn').addEventListener('click', () => {
+      const newName = document.getElementById('rename-input').value
+      if (!newName) return
+      const renameMode = document.getElementById('rename-mode').value.toLowerCase()
+      parent.postMessage({ pluginMessage: {
+        type: 'bulk-rename',
+        varIds: [...selectedIds],
+        newName,
+        renameMode,
+        resultIds: bulkResults.map(r => r.id)
+      } }, '*')
+    })
+
+    document.getElementById('value-btn').addEventListener('click', () => {
+      const newValue = document.getElementById('value-input').value
+      if (!newValue && newValue !== '0') return
+      const types = [...selectedIds].map(id => {
+        const r = bulkResults.find(v => v.id === id)
+        return r ? r.resolvedType : 'STRING'
+      })
+      const resolvedType = types[0] || 'STRING'
+      parent.postMessage({ pluginMessage: {
+        type: 'bulk-set-value',
+        varIds: [...selectedIds],
+        newValue,
+        resolvedType,
+        resultIds: bulkResults.map(r => r.id)
+      } }, '*')
+    })
+
+    let dedupSortCol = 'count'
+    let dedupSortAsc = false
+
+    const selections = {}
+
+    function sortDuplicates(duplicates) {
+      const col = dedupSortCol
+      const asc = dedupSortAsc
+      return duplicates.slice().sort((a, b) => {
+        let va, vb
+        if (col === 'value') { va = a.valueLabel.toLowerCase(); vb = b.valueLabel.toLowerCase() }
+        else if (col === 'type') { va = a.resolvedType; vb = b.resolvedType }
+        else if (col === 'count') { va = a.variables.length; vb = b.variables.length }
+        else if (col === 'alias') { va = a.variables.filter(v => v.isAlias).length; vb = b.variables.filter(v => v.isAlias).length }
+        else { va = a.valueLabel.toLowerCase(); vb = b.valueLabel.toLowerCase() }
+        if (va < vb) return asc ? -1 : 1
+        if (va > vb) return asc ? 1 : -1
+        return 0
+      })
+    }
+
+    function renderResults(duplicates, totalVars, highlightCanonicalId) {
+      const container = document.getElementById('results')
+      const summaryEl = document.getElementById('dedup-summary')
+      const colHeadersEl = document.getElementById('dedup-col-headers-fixed')
+
+      if (!duplicates || duplicates.length === 0) {
+        container.innerHTML = '<div class="empty-state">No duplicate raw values found across your variables.</div>'
+        summaryEl.textContent = ''
+        colHeadersEl.innerHTML = ''
+        return
+      }
+
+      let totalDups = 0
+      duplicates.forEach(g => totalDups += g.variables.length)
+
+      const sorted = sortDuplicates(duplicates)
+
+      summaryEl.textContent = totalVars + ' variables scanned, ' + totalDups + ' in ' + duplicates.length + ' duplicate groups'
+
+      let colHtml = ''
+      colHtml += '<span class="dedup-col-spacer"></span>'
+      colHtml += '<span class="col-header' + (dedupSortCol === 'value' ? ' active' : '') + '" data-col="value" style="flex:1;">Value <span class="sort-arrow">' + (dedupSortAsc ? '&#9650;' : '&#9660;') + '</span></span>'
+      colHtml += '<span class="col-header col-alias' + (dedupSortCol === 'alias' ? ' active' : '') + '" data-col="alias">Alias <span class="sort-arrow">' + (dedupSortAsc ? '&#9650;' : '&#9660;') + '</span></span>'
+      colHtml += '<span class="col-header col-type' + (dedupSortCol === 'type' ? ' active' : '') + '" data-col="type">Type <span class="sort-arrow">' + (dedupSortAsc ? '&#9650;' : '&#9660;') + '</span></span>'
+      colHtml += '<span class="col-header' + (dedupSortCol === 'count' ? ' active' : '') + '" data-col="count" style="width:50px;">Count <span class="sort-arrow">' + (dedupSortAsc ? '&#9650;' : '&#9660;') + '</span></span>'
+      colHeadersEl.innerHTML = colHtml
+
+      let html = ''
+
+      sorted.forEach((group, gi) => {
+        const aliasedCount = group.variables.filter(v => v.isAlias).length
+        const allAliased = aliasedCount > 0 && aliasedCount === group.variables.length - 1
+        const aliasHeaderTag = aliasedCount > 0
+          ? '<span class="alias-count-tag' + (allAliased ? ' all-aliased' : '') + '">' + aliasedCount + ' aliased</span>'
+          : ''
+        const canonicalTag = aliasedCount > 0 && group.canonicalName
+          ? '<span class="alias-tag">&#x2192; ' + escapeHtml(group.canonicalName) + '</span>'
+          : ''
+        const shouldOpen = highlightCanonicalId && group.variables.some(v => v.id === highlightCanonicalId)
+
+        html += '<div class="group">'
+        html += '<div class="group-header" data-group="' + gi + '">'
+        html += '<span class="chevron' + (shouldOpen ? ' open' : '') + '" id="chev-' + gi + '">&#9654;</span>'
+        html += '<button class="copy-btn" data-value="' + escapeHtml(group.valueLabel) + '" title="Copy value"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3.5A.5.5 0 013.5 3H11"/></svg></button>'
+        if (group.resolvedType === 'COLOR' && group.valueLabel.startsWith('#')) {
+          html += '<span class="color-swatch" style="background:' + escapeHtml(group.valueLabel) + ';"></span>'
+        }
+        html += '<span class="value-badge">' + escapeHtml(group.valueLabel) + '</span>'
+        html += canonicalTag
+        if (aliasedCount > 0) {
+          html += aliasHeaderTag
+        } else {
+          html += '<span class="alias-placeholder"></span>'
+        }
+        html += '<span class="type-badge">' + group.resolvedType + '</span>'
+        html += '<span class="count-badge">' + group.variables.length + '</span>'
+        html += '</div>'
+        html += '<div class="group-body' + (shouldOpen ? ' open' : '') + '" id="body-' + gi + '">'
+
+        group.variables.forEach((v, vi) => {
+          const radioName = 'group-' + gi
+          const checked = vi === 0 ? 'checked' : ''
+          if (vi === 0) selections[gi] = v.id
+          const aliasTag = v.isAlias
+            ? '<span class="alias-tag" title="Alias \u2192 ' + escapeHtml(v.aliasTargetName || '?') + '">\u2192 ' + escapeHtml(v.aliasTargetName || 'alias') + '</span>'
+            : ''
+          const detachBtn = v.isAlias
+            ? '<button class="detach-btn" data-var-id="' + v.id + '">Detach</button>'
+            : ''
+          html += '<div class="var-row">'
+          html += '<input type="radio" class="var-radio" name="' + radioName + '" value="' + v.id + '" ' + checked + ' data-group="' + gi + '">'
+          html += '<span class="var-name" title="' + escapeHtml(v.name) + '">' + escapeHtml(v.name) + '</span>'
+          html += aliasTag
+          html += '<span class="var-collection">' + escapeHtml(v.collection) + '</span>'
+          html += detachBtn
+          html += '</div>'
+        })
+
+        const hasAliases = group.variables.some(v => v.isAlias)
+        html += '</div>'
+        html += '<div class="apply-row' + (shouldOpen ? '' : ' hidden') + '" id="apply-' + gi + '">'
+        if (hasAliases) html += '<button class="detach-btn detach-all-btn" data-group="' + gi + '" type="button">Detach all</button>'
+        html += '<button class="apply-btn action-button" data-group="' + gi + '" type="button">Alias to selected</button>'
+        html += '</div></div>'
+      })
+
+      container.innerHTML = html
+
+      document.querySelectorAll('#dedup-col-headers-fixed .col-header').forEach(h => {
+        h.addEventListener('click', () => {
+          const col = h.getAttribute('data-col')
+          if (dedupSortCol === col) {
+            dedupSortAsc = !dedupSortAsc
+          } else {
+            dedupSortCol = col
+            dedupSortAsc = (col === 'count' || col === 'alias') ? false : true
+          }
+          filterDuplicates()
+        })
+      })
+
+      document.querySelectorAll('.group-header').forEach(h => {
+        h.addEventListener('click', () => {
+          const gi = h.getAttribute('data-group')
+          const body = document.getElementById('body-' + gi)
+          const chev = document.getElementById('chev-' + gi)
+          const applyRow = document.getElementById('apply-' + gi)
+          body.classList.toggle('open')
+          chev.classList.toggle('open')
+          if (applyRow) applyRow.classList.toggle('hidden')
+        })
+      })
+
+      document.querySelectorAll('.var-radio').forEach(r => {
+        r.addEventListener('change', (e) => {
+          selections[e.target.getAttribute('data-group')] = e.target.value
+        })
+      })
+
+      document.querySelectorAll('.apply-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const gi = Number(btn.getAttribute('data-group'))
+          const keepId = selections[gi]
+          const group = sorted[gi]
+          const aliasIds = group.variables.map(v => v.id).filter(id => id !== keepId)
+          parent.postMessage({ pluginMessage: { type: 'apply-alias', keepId, aliasIds } }, '*')
+        })
+      })
+
+      document.querySelectorAll('.detach-all-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const gi = Number(btn.getAttribute('data-group'))
+          const group = sorted[gi]
+          const aliasIds = group.variables.filter(v => v.isAlias).map(v => v.id)
+          if (aliasIds.length > 0) {
+            parent.postMessage({ pluginMessage: { type: 'detach-all', varIds: aliasIds } }, '*')
+          }
+        })
+      })
+
+      document.querySelectorAll('.detach-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const varId = btn.getAttribute('data-var-id')
+          parent.postMessage({ pluginMessage: { type: 'detach-alias', varId } }, '*')
+        })
+      })
+
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const val = btn.getAttribute('data-value')
+          const ta = document.createElement('textarea')
+          ta.value = val
+          ta.style.position = 'fixed'
+          ta.style.opacity = '0'
+          document.body.appendChild(ta)
+          ta.select()
+          let ok = false
+          try { ok = document.execCommand('copy') } catch (_) {}
+          document.body.removeChild(ta)
+          if (!ok) {
+            try { navigator.clipboard.writeText(val) } catch (_) {}
+          }
+          btn.title = 'Copied!'
+          setTimeout(() => { btn.title = 'Copy value' }, 1500)
+        })
+      })
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div')
+      d.textContent = str
+      return d.innerHTML
+    }
+
+    let currentDuplicates = null
+    let currentTotalVars = 0
+    let currentHighlightId = null
+
+    function filterDuplicates() {
+      if (!currentDuplicates) return
+      const query = (document.getElementById('dedup-search').value || '').trim().toLowerCase()
+      if (!query) {
+        renderResults(currentDuplicates, currentTotalVars, currentHighlightId)
+        return
+      }
+      const filtered = currentDuplicates.filter(group => {
+        const valueMatch = group.valueLabel.toLowerCase().includes(query)
+        const nameMatch = group.variables.some(v => v.name.toLowerCase().includes(query))
+        return nameMatch || valueMatch
+      })
+      renderResults(filtered, currentTotalVars, currentHighlightId)
+    }
+
+    let dedupSearchTimer = null
+    document.getElementById('dedup-search').addEventListener('input', () => {
+      if (dedupSearchTimer) clearTimeout(dedupSearchTimer)
+      dedupSearchTimer = setTimeout(filterDuplicates, 200)
+    })
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage
+      if (!msg) return
+      if (msg.type === 'scan-result') {
+        currentDuplicates = msg.duplicates
+        currentTotalVars = msg.totalVars
+        currentHighlightId = msg.highlightCanonicalId
+        filterDuplicates()
+      }
+      if (msg.type === 'search-result') {
+        if (msg.totalVars != null) bulkTotalVars = msg.totalVars
+        renderSearchResults(msg.results, msg.total, msg.preserveSelection)
+      }
+    }
+
+    doSearch()
+  </script>
+</body>
+</html>
