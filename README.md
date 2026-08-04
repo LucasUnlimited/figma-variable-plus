@@ -1,38 +1,31 @@
-Below are the steps to get your plugin running. You can also find instructions at:
+# Variable Plus
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+Manage variables in a more efficient way. It provides a user-friendly interface to create, edit, and organize variables, making it easier to maintain consistency across your designs.
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+## Installation
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+1. Clone this repository
+2. Run `npm install`
+3. Run `npm run build`
 
-  https://nodejs.org/en/download/
+## Local Development
 
-Next, install TypeScript using the command:
+1. Clone the repo and run `npm install` to get typings
+2. Run `npm run build` to compile, or `npm run watch` for auto-recompile on save
+3. In Figma Desktop, go to **Plugins > Development > Import plugin from manifest** and select the `manifest.json` file
+4. The plugin appears under **Plugins > Development**
+5. After each rebuild, re-run the plugin to pick up changes
 
-  npm install -g typescript
+## Usage
 
-This plugin uses plain TypeScript with a minimal build setup and does not require extra Figma type packages.
+1. Select one or more layers containing component instances
+2. Run the plugin — it scans for instances with text properties and displays them in a table
+3. Edit values inline, or use Export/Import CSV for bulk editing in a spreadsheet
+4. Click **Apply** to push changes back to the instances
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid TypeScript code.
+## Publishing
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
-
-For more information, visit https://www.typescriptlang.org/
-
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
-
-We recommend writing TypeScript code using Visual Studio code:
-
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
-
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+1. Register a new plugin at [figma.com/developers](https://figma.com/developers) to get a plugin ID
+2. Replace `"your-plugin-id-here"` in `manifest.json` with your plugin ID
+3. Build and test locally
+4. Submit for review via the Figma developer portal
