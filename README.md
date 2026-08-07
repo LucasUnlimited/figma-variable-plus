@@ -4,9 +4,12 @@ Manage variables in a more efficient way. It provides a user-friendly interface 
 
 ## Installation
 
-1. Clone this repository
-2. Run `npm install`
-3. Run `npm run build`
+1. First, download Node.js, which includes npm. You can get it from https://nodejs.org/en/download/
+2. Install TypeScript globally with `npm install -g typescript`
+3. In the plugin directory, install the Figma plugin type definitions with `npm install --save-dev @figma/plugin-typings`
+4. Clone this repository
+5. Run `npm install`
+6. Run `npm run build`
 
 ## Local Development
 
@@ -18,10 +21,10 @@ Manage variables in a more efficient way. It provides a user-friendly interface 
 
 ## Usage
 
-1. Select one or more layers containing component instances
-2. Run the plugin — it scans for instances with text properties and displays them in a table
-3. Edit values inline, or use Export/Import CSV for bulk editing in a spreadsheet
-4. Click **Apply** to push changes back to the instances
+1. Run the plugin to scan the existing variables on the file
+2. See every raw value and in with layer she was applied to assing a alias
+3. Bulk edit values and name of variables
+4. Click **Apply** to push changes back to the varible
 
 ## Publishing
 
