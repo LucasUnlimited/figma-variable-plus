@@ -299,32 +299,44 @@ type BulkSearchResult = {
   modes: { modeId: string; modeName: string; value: string; rawValue: VariableValue }[]
 }
 
-async function searchVariables(query: string, searchBy: string) {
+async function searchVariables(query: string = '', searchBy: string = 'all', preserveSelection: boolean = false) {
   const variables = await figma.variables.getLocalVariablesAsync()
   const collections = await figma.variables.getLocalVariableCollectionsAsync()
   const collectionMap = new Map<string, VariableCollection>()
   for (const c of collections) collectionMap.set(c.id, c)
 
-  const lowerQuery = query.toLowerCase()
+  const allVarsById = new Map<string, Variable>()
+  for (const va of variables) allVarsById.set(va.id, va)
+
+  const lowerQuery = (query || '').toLowerCase().trim()
 
   const matched = lowerQuery.length === 0 ? variables : variables.filter((v: Variable) => {
-    if (searchBy === 'name') {
-      return v.name.toLowerCase().includes(lowerQuery)
-    } else if (searchBy === 'value') {
-      const modeEntries = Object.values(v.valuesByMode)
-      return modeEntries.some(val => formatValueLabel(val).toLowerCase().includes(lowerQuery))
-    } else {
-      const nameMatch = v.name.toLowerCase().includes(lowerQuery)
-      if (nameMatch) return true
-      const modeEntries = Object.values(v.valuesByMode)
-      return modeEntries.some(val => formatValueLabel(val).toLowerCase().includes(lowerQuery))
+    if (v.name.toLowerCase().includes(lowerQuery)) return true
+
+    const modeEntries = Object.values(v.valuesByMode)
+    for (const val of modeEntries) {
+      if (typeof val === 'object' && val !== null && 'type' in val && (val as VariableAlias).type === 'VARIABLE_ALIAS') {
+        const target = allVarsById.get((val as VariableAlias).id)
+        if (target && target.name.toLowerCase().includes(lowerQuery)) return true
+      }
     }
+
+    if (searchBy === 'name') return false
+
+    return modeEntries.some(val => {
+      if (formatValueLabel(val).toLowerCase().includes(lowerQuery)) return true
+      if (typeof val === 'object' && val !== null && 'type' in val && (val as VariableAlias).type === 'VARIABLE_ALIAS') {
+        const target = allVarsById.get((val as VariableAlias).id)
+        if (target) {
+          const targetEntries = Object.values(target.valuesByMode)
+          return targetEntries.some(tVal => formatValueLabel(tVal).toLowerCase().includes(lowerQuery))
+        }
+      }
+      return false
+    })
   })
 
   const results: BulkSearchResult[] = []
-
-  const allVarsById = new Map<string, Variable>()
-  for (const va of variables) allVarsById.set(va.id, va)
 
   for (const v of matched) {
     const col = collectionMap.get(v.variableCollectionId)
@@ -359,7 +371,7 @@ async function searchVariables(query: string, searchBy: string) {
     })
   }
 
-  figma.ui.postMessage({ type: 'search-result', results, total: matched.length, totalVars: variables.length })
+  figma.ui.postMessage({ type: 'search-result', results, total: matched.length, totalVars: variables.length, preserveSelection })
 }
 
 async function bulkRename(varIds: string[], newName: string, mode: string) {
@@ -469,27 +481,34 @@ figma.ui.onmessage = async (msg: { type: string; [key: string]: unknown }) => {
   }
   if (msg.type === 'scan') {
     await scan()
+    await searchVariables((msg.query as string) || '', (msg.searchBy as string) || 'all')
   }
   if (msg.type === 'apply-alias') {
     await applyAlias(msg.keepId as string, msg.aliasIds as string[])
+    await searchVariables('', 'all')
   }
   if (msg.type === 'detach-alias') {
     await detachAlias(msg.varId as string)
+    await searchVariables('', 'all')
   }
   if (msg.type === 'detach-all') {
     await detachAll(msg.varIds as string[])
+    await searchVariables('', 'all')
   }
   if (msg.type === 'search-vars') {
-    await searchVariables(msg.query as string, msg.searchBy as string)
+    await searchVariables((msg.query as string) || '', (msg.searchBy as string) || 'all')
   }
   if (msg.type === 'bulk-rename') {
     await bulkRename(msg.varIds as string[], msg.newName as string, msg.renameMode as string)
     await refreshResultsByIds(msg.resultIds as string[])
+    await scan()
   }
   if (msg.type === 'bulk-set-value') {
     await bulkSetValue(msg.varIds as string[], msg.newValue as string, msg.resolvedType as string)
     await refreshResultsByIds(msg.resultIds as string[])
+    await scan()
   }
 }
 
 scan()
+searchVariables('', 'all')

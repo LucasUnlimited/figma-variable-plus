@@ -54,6 +54,7 @@
       --spacer-4: 16px;
       --spacer-5: 24px;
       --motion-fast: 0.18s ease;
+      --motion-hover: 0.18s ease;
       --motion-subtle: 0.15s ease;
     }
 
@@ -143,25 +144,54 @@
     }
 
     .theme-toggle {
-      width: 36px;
-      height: 36px;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      border: 1px solid var(--plus-color-border);
-      border-radius: var(--radius-pill);
-      background: var(--plus-color-bg);
-      color: var(--plus-color-text);
+      gap: 6px;
+      padding: 2px 6px 2px 2px;
+      border-radius: var(--radius-pill, 999px);
+      border: 1px solid var(--plus-color-border, #ddd);
+      background: var(--plus-color-bg-secondary, #f5f5f5);
+      color: var(--plus-color-text, #333);
       cursor: pointer;
-      padding: 0;
-      font-size: 14px;
-      transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: background var(--motion-hover, 0.18s ease), border-color var(--motion-hover, 0.18s ease), transform var(--motion-hover, 0.18s ease);
     }
-
     .theme-toggle:hover {
-      background: var(--plus-color-bg-hover);
-      border-color: var(--plus-color-border-brand);
+      background: var(--plus-color-bg-hover, #eef2f7);
+      border-color: var(--plus-color-border-brand, #ff9f30);
       transform: translateY(-1px);
+    }
+    .theme-toggle__track {
+      width: 26px;
+      height: 14px;
+      border-radius: var(--radius-pill, 999px);
+      background: var(--plus-color-border, #d0d7de);
+      padding: 2px;
+      display: inline-flex;
+      align-items: center;
+      transition: background var(--motion-hover, 0.18s ease);
+    }
+    .theme-toggle__thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--plus-color-bg, #fff);
+      transform: translateX(0);
+      transition: transform var(--motion-hover, 0.18s ease), background var(--motion-hover, 0.18s ease);
+      box-shadow: 0 1px 2px rgba(2, 6, 23, 0.16);
+    }
+    .theme-toggle[aria-pressed="true"] .theme-toggle__track { background: var(--plus-color-bg-brand, #ff9f30); }
+    .theme-toggle[aria-pressed="true"] .theme-toggle__thumb { transform: translateX(12px); background: var(--plus-color-text-onbrand, #fff); }
+    .theme-toggle__label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--plus-color-text-secondary, #666);
     }
 
     .theme-toggle:focus-visible,
@@ -176,27 +206,13 @@
       box-shadow: var(--plus-color-input-shadow);
     }
 
-    .tab-button {
-      all: unset;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: var(--radius-pill);
-      font-size: var(--font-size-body);
-      font-weight: 600;
-      color: var(--plus-color-text-secondary);
+    .tab-button:not(.active) {
       background: transparent;
-      border: 1px solid transparent;
-      transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
-    }
-
-    .tab-button.active {
-      color: var(--plus-color-text);
-      background: var(--plus-color-bg);
       border-color: var(--plus-color-border);
-      box-shadow: inset 0 0 0 1px var(--plus-color-border);
+      color: var(--plus-color-text-secondary);
     }
 
-    .tab-button:hover {
+    .tab-button:not(.active):hover {
       background: var(--plus-color-bg-hover);
       color: var(--plus-color-text);
     }
@@ -457,14 +473,69 @@
     .search-row {
       display: flex;
       gap: var(--spacer-2);
-      padding: 10px 12px;
+      padding: var(--spacer-2, 8px) var(--spacer-3, 12px);
       align-items: center;
       flex-shrink: 0;
       background: var(--plus-color-bg-secondary);
       border-bottom: 1px solid var(--plus-color-border);
     }
 
-    .search-row .search-input,
+    .search-wrap {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--plus-color-text-tertiary, #999);
+      display: flex;
+    }
+    .search-wrap .search-icon svg { width: 12px; height: 12px; }
+    .search-wrap .clear-btn {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: var(--plus-color-text-tertiary, #999);
+      border-radius: 2px;
+    }
+    .search-wrap .clear-btn:hover { color: var(--plus-color-text, #333); }
+    .search-wrap .clear-btn svg { width: 10px; height: 10px; }
+    .search-wrap.has-value .clear-btn { display: flex; }
+    .search-input {
+      width: 100%;
+      padding: 5px 24px 5px 26px;
+      border-radius: var(--radius-sm, 6px);
+      border: 1px solid var(--plus-color-border, #ddd);
+      background: var(--plus-color-bg, #fff);
+      color: var(--plus-color-text, #333);
+      font-family: inherit;
+      font-size: 10px;
+      outline: none;
+      box-sizing: border-box;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .search-input::placeholder {
+      color: var(--plus-color-text-tertiary);
+    }
+    .search-input:focus {
+      border-color: var(--plus-color-border-brand, #ff9f30);
+      box-shadow: var(--plus-color-input-shadow, 0 0 0 2px rgba(255, 159, 48, 0.14));
+    }
+
     .bulk-action-row .rename-mode,
     .bulk-input {
       flex: 1;
@@ -479,12 +550,10 @@
       outline: none;
     }
 
-    .search-row .search-input::placeholder,
     .bulk-input::placeholder {
       color: var(--plus-color-text-tertiary);
     }
 
-    .search-row .search-input:focus,
     .bulk-action-row .rename-mode:focus,
     .bulk-input:focus {
       border-color: var(--plus-color-border-brand);
@@ -716,15 +785,22 @@
   <div id="plugin-root">
     <div class="tab-bar">
       <div class="tabs">
-        <button id="tab-bulk-btn" class="tab-button active" type="button">Bulk edit</button>
-        <button id="tab-dedup-btn" class="tab-button" type="button">Deduplicator</button>
+        <button id="tab-bulk-btn" class="tab-button action-button active" type="button">Bulk edit</button>
+        <button id="tab-dedup-btn" class="tab-button action-button" type="button">Deduplicator</button>
       </div>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light mode">☀</button>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="true" title="Toggle dark mode">
+        <span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span>
+        <span id="theme-toggle-label" class="theme-toggle__label">Dark</span>
+      </button>
     </div>
     <div class="content-area">
       <div id="tab-bulk" class="tab-panel active">
         <div class="search-row">
-          <input id="var-search" class="search-input" placeholder="Search by name or value..." type="search">
+          <div class="search-wrap" id="var-search-wrap">
+            <span class="search-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg></span>
+            <input id="var-search" class="search-input" placeholder="Search by name or value..." type="text">
+            <button class="clear-btn" id="var-search-clear" title="Clear filter"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></button>
+          </div>
         </div>
         <div class="summary" id="bulk-summary"></div>
         <div class="column-headers" id="bulk-col-headers">
@@ -762,7 +838,11 @@
       </div>
       <div id="tab-dedup" class="tab-panel">
         <div class="search-row">
-          <input id="dedup-search" class="search-input" placeholder="Filter by name or value..." type="search">
+          <div class="search-wrap" id="dedup-search-wrap">
+            <span class="search-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg></span>
+            <input id="dedup-search" class="search-input" placeholder="Filter by name or value..." type="text">
+            <button class="clear-btn" id="dedup-search-clear" title="Clear filter"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></button>
+          </div>
         </div>
         <div class="summary" id="dedup-summary"></div>
         <div class="column-headers" id="dedup-col-headers-fixed"></div>
@@ -789,9 +869,12 @@
       const resolvedTheme = isLight ? 'light' : 'dark'
       document.documentElement.setAttribute('data-theme', resolvedTheme)
       document.body.setAttribute('data-theme', resolvedTheme)
+      const themeLabel = document.getElementById('theme-toggle-label')
       if (themeToggle) {
-        themeToggle.textContent = isLight ? '☾' : '☀'
-        themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode')
+        themeToggle.setAttribute('aria-pressed', resolvedTheme === 'dark' ? 'true' : 'false')
+      }
+      if (themeLabel) {
+        themeLabel.textContent = resolvedTheme === 'dark' ? 'Dark' : 'Light'
       }
       window.localStorage.setItem('plus-theme', resolvedTheme)
     }
@@ -824,7 +907,20 @@
     let bulkTotalVars = 0
 
     rescanBtn.addEventListener('click', () => {
-      parent.postMessage({ pluginMessage: { type: 'scan' } }, '*')
+      rescanBtn.disabled = true
+      const origText = rescanBtn.textContent
+      rescanBtn.textContent = 'Scanning...'
+
+      const query = varSearchInput ? varSearchInput.value : (document.getElementById('var-search')?.value || '')
+      lastQuery = (query || '').trim()
+
+      parent.postMessage({ pluginMessage: { type: 'scan', query: lastQuery, searchBy: 'all' } }, '*')
+      doSearch()
+
+      setTimeout(() => {
+        rescanBtn.disabled = false
+        rescanBtn.textContent = origText
+      }, 500)
     })
 
     let bulkResults = []
@@ -839,7 +935,7 @@
       const asc = bulkSortAsc
       return results.slice().sort((a, b) => {
         let va, vb
-        if (col === 'name') { va = (a.isAlias && a.aliasTargetName ? a.aliasTargetName : a.name).toLowerCase(); vb = (b.isAlias && b.aliasTargetName ? b.aliasTargetName : b.name).toLowerCase() }
+        if (col === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase() }
         else if (col === 'value') { va = a.valueLabel.toLowerCase(); vb = b.valueLabel.toLowerCase() }
         else if (col === 'collection') { va = a.collection.toLowerCase(); vb = b.collection.toLowerCase() }
         else if (col === 'type') { va = a.resolvedType; vb = b.resolvedType }
@@ -883,16 +979,44 @@
     }
 
     let searchTimer = null
+    const varSearchInput = document.getElementById('var-search')
+    const varSearchWrap = document.getElementById('var-search-wrap')
+    const varSearchClear = document.getElementById('var-search-clear')
+
+    function updateVarSearchWrap() {
+      if (varSearchInput && varSearchWrap) {
+        if (varSearchInput.value) {
+          varSearchWrap.classList.add('has-value')
+        } else {
+          varSearchWrap.classList.remove('has-value')
+        }
+      }
+    }
+
     function doSearch() {
-      const query = document.getElementById('var-search').value || ''
-      lastQuery = query.trim()
+      const query = varSearchInput ? varSearchInput.value : (document.getElementById('var-search')?.value || '')
+      lastQuery = (query || '').trim()
       parent.postMessage({ pluginMessage: { type: 'search-vars', query: lastQuery, searchBy: 'all' } }, '*')
     }
 
-    document.getElementById('var-search').addEventListener('input', () => {
-      if (searchTimer) clearTimeout(searchTimer)
-      searchTimer = setTimeout(doSearch, 300)
-    })
+    if (varSearchInput) {
+      varSearchInput.addEventListener('input', () => {
+        updateVarSearchWrap()
+        if (searchTimer) clearTimeout(searchTimer)
+        searchTimer = setTimeout(doSearch, 300)
+      })
+    }
+
+    if (varSearchClear) {
+      varSearchClear.addEventListener('click', () => {
+        if (varSearchInput) {
+          varSearchInput.value = ''
+          updateVarSearchWrap()
+          doSearch()
+          varSearchInput.focus()
+        }
+      })
+    }
 
     function renderSearchResults(results, total, preserveSelection) {
       const container = document.getElementById('search-results')
@@ -909,7 +1033,7 @@
 
       const bulkSummaryEl = document.getElementById('bulk-summary')
       if (!results || results.length === 0) {
-        container.innerHTML = '<div class="empty-state">No variables found matching your search.</div>'
+        container.innerHTML = '<div class="empty-state">No variables found' + (lastQuery ? ' matching your search.' : ' in this file.') + '</div>'
         bulkSummaryEl.textContent = bulkTotalVars + ' variables scanned, 0 results'
         document.getElementById('bulk-actions').classList.add('hidden')
         return
@@ -928,12 +1052,12 @@
 
       sorted.forEach((v, vi) => {
         const isChecked = selectedIds.has(v.id)
-        const displayName = v.isAlias && v.aliasTargetName ? v.aliasTargetName : v.name
+        const displayName = v.name
         html += '<div class="search-result-item' + (isChecked ? ' selected' : '') + '" data-id="' + v.id + '" data-idx="' + vi + '">'
         html += '<input type="checkbox" class="sr-checkbox" data-id="' + v.id + '"' + (isChecked ? ' checked' : '') + '>'
         html += '<span class="sr-name col-name" title="' + escapeHtml(v.name) + '">' + escapeHtml(displayName) + '</span>'
         const aliasTag = v.isAlias && v.aliasTargetName
-          ? '<span class="alias-tag" title="Alias \u2192 ' + escapeHtml(v.aliasTargetName) + '">\u2192 ' + escapeHtml(v.name) + '</span>'
+          ? '<span class="alias-tag" title="Alias \u2192 ' + escapeHtml(v.aliasTargetName) + '">\u2192 ' + escapeHtml(v.aliasTargetName) + '</span>'
           : ''
         html += aliasTag
         html += '<span class="sr-value col-value" title="' + escapeHtml(v.valueLabel) + '">' + escapeHtml(v.valueLabel) + '</span>'
@@ -1228,11 +1352,39 @@
       renderResults(filtered, currentTotalVars, currentHighlightId)
     }
 
+    const dedupSearchInput = document.getElementById('dedup-search')
+    const dedupSearchWrap = document.getElementById('dedup-search-wrap')
+    const dedupSearchClear = document.getElementById('dedup-search-clear')
+
+    function updateDedupSearchWrap() {
+      if (dedupSearchInput && dedupSearchWrap) {
+        if (dedupSearchInput.value) {
+          dedupSearchWrap.classList.add('has-value')
+        } else {
+          dedupSearchWrap.classList.remove('has-value')
+        }
+      }
+    }
+
     let dedupSearchTimer = null
-    document.getElementById('dedup-search').addEventListener('input', () => {
-      if (dedupSearchTimer) clearTimeout(dedupSearchTimer)
-      dedupSearchTimer = setTimeout(filterDuplicates, 200)
-    })
+    if (dedupSearchInput) {
+      dedupSearchInput.addEventListener('input', () => {
+        updateDedupSearchWrap()
+        if (dedupSearchTimer) clearTimeout(dedupSearchTimer)
+        dedupSearchTimer = setTimeout(filterDuplicates, 200)
+      })
+    }
+
+    if (dedupSearchClear) {
+      dedupSearchClear.addEventListener('click', () => {
+        if (dedupSearchInput) {
+          dedupSearchInput.value = ''
+          updateDedupSearchWrap()
+          filterDuplicates()
+          dedupSearchInput.focus()
+        }
+      })
+    }
 
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage
