@@ -2,14 +2,14 @@
   "name": "Variable Plus",
   "id": "1664638606622512502",
   "api": "1.0.0",
+  "main": "src/code.js",
   "capabilities": [],
   "enableProposedApi": false,
   "documentAccess": "dynamic-page",
   "editorType": [
     "figma"
   ],
-  "main": "src/code.js",
-    "ui": "src/ui.html",
+  "ui": "src/ui.html",
   "networkAccess": {
     "allowedDomains": [
       "none"
