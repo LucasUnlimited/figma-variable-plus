@@ -4,7 +4,7 @@
 [![Language](https://img.shields.io/badge/Language-Javascript-language)](https://web.dev/javascript)
 [![Framework](https://img.shields.io/badge/Framework-Typescript-orange)](https://www.typescriptlang.org/)
 
-**Variable Plus** is a plugin for Figma Design to manage variables in a more efficient way. It provides a user-friendly interface to create, edit, and organize variables, making it easier to maintain consistency across your designs.
+**Variable Plus** is a plugin for Figma Design to manage variables in a more efficient way. It provides a user-friendly interface to edit and organize variables, making it easier to maintain consistency across your designs.
 
 <img width="235" height="303" alt="image" src="https://github.com/user-attachments/assets/49e6dece-3c25-4811-a1ee-2ffd1b2886f3" />
 <img width="235" height="303" alt="image" src="https://github.com/user-attachments/assets/c2625a7c-421a-4d37-b400-a157e7323af8" />
