@@ -542,12 +542,19 @@
       min-width: 0;
       font-family: var(--font-family);
       font-size: var(--font-size-body);
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--plus-color-border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm, 6px);
       background: var(--plus-color-bg);
       color: var(--plus-color-text);
       outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      height: 32px;
+      box-sizing: border-box;
+    }
+
+    .bulk-action-row select.rename-mode {
+      cursor: pointer;
     }
 
     .bulk-input::placeholder {
@@ -570,6 +577,20 @@
       font-size: 10px;
       font-weight: 600;
       cursor: pointer;
+    }
+
+    .bulk-action-row .action-button {
+      height: 32px;
+      min-width: 80px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      font-size: 11px;
+      transition: background var(--motion-hover, 0.18s ease), transform var(--motion-hover, 0.18s ease);
+    }
+    .bulk-action-row .action-button:hover {
+      transform: translateY(-1px);
     }
 
     .plugin-footer {
@@ -969,12 +990,88 @@
       })
     })
 
+    function getSelectedVars() {
+      return bulkResults.filter(v => selectedIds.has(v.id))
+    }
+
+    function getVarEditValue(v) {
+      if (!v) return ''
+      if (v.editValue !== undefined && v.editValue !== null) {
+        return v.editValue
+      }
+      if (v.valueLabel) {
+        if (v.resolvedType === 'STRING' && v.valueLabel.startsWith('"') && v.valueLabel.endsWith('"')) {
+          return v.valueLabel.slice(1, -1)
+        }
+        return v.valueLabel
+      }
+      return ''
+    }
+
     function updateBulkActions() {
       const panel = document.getElementById('bulk-actions')
+      if (!panel) return
       if (selectedIds.size === 0) {
         panel.classList.add('hidden')
+        return
+      }
+      panel.classList.remove('hidden')
+
+      const selected = getSelectedVars()
+      const renameModeSelect = document.getElementById('rename-mode')
+      const renameMode = (renameModeSelect?.value || 'replace').toLowerCase()
+      const renameIn = document.getElementById('rename-input')
+      const valueIn = document.getElementById('value-input')
+
+      if (!renameIn || !valueIn || selected.length === 0) return
+
+      // --- Update Rename Input & Placeholder ---
+      if (selected.length === 1) {
+        const singleVar = selected[0]
+        if (renameMode === 'replace') {
+          renameIn.value = singleVar.name
+          renameIn.placeholder = 'New name...'
+        } else if (renameMode === 'prefix') {
+          renameIn.value = ''
+          renameIn.placeholder = 'Prefix to add to ' + singleVar.name + '...'
+        } else if (renameMode === 'suffix') {
+          renameIn.value = ''
+          renameIn.placeholder = 'Suffix to add to ' + singleVar.name + '...'
+        }
       } else {
-        panel.classList.remove('hidden')
+        const firstName = selected[0].name
+        const allSameName = selected.every(v => v.name === firstName)
+        if (allSameName && renameMode === 'replace') {
+          renameIn.value = firstName
+          renameIn.placeholder = 'New name...'
+        } else {
+          renameIn.value = ''
+          if (renameMode === 'replace') {
+            renameIn.placeholder = 'New name for ' + selected.length + ' variables...'
+          } else if (renameMode === 'prefix') {
+            renameIn.placeholder = 'Prefix to prepend (' + selected.length + ' variables)...'
+          } else if (renameMode === 'suffix') {
+            renameIn.placeholder = 'Suffix to append (' + selected.length + ' variables)...'
+          }
+        }
+      }
+
+      // --- Update Value Input & Placeholder ---
+      if (selected.length === 1) {
+        const singleVar = selected[0]
+        valueIn.value = getVarEditValue(singleVar)
+        const typeHint = singleVar.resolvedType ? singleVar.resolvedType.toLowerCase() : ''
+        valueIn.placeholder = typeHint ? 'New value (' + typeHint + ')...' : 'New value...'
+      } else {
+        const firstVal = getVarEditValue(selected[0])
+        const allSameVal = selected.every(v => getVarEditValue(v) === firstVal)
+        if (allSameVal) {
+          valueIn.value = firstVal
+          valueIn.placeholder = 'New value...'
+        } else {
+          valueIn.value = ''
+          valueIn.placeholder = 'Set value for ' + selected.length + ' variables...'
+        }
       }
     }
 
@@ -1106,35 +1203,67 @@
       })
     }
 
-    document.getElementById('rename-btn').addEventListener('click', () => {
-      const newName = document.getElementById('rename-input').value
-      if (!newName) return
-      const renameMode = document.getElementById('rename-mode').value.toLowerCase()
-      parent.postMessage({ pluginMessage: {
-        type: 'bulk-rename',
-        varIds: [...selectedIds],
-        newName,
-        renameMode,
-        resultIds: bulkResults.map(r => r.id)
-      } }, '*')
-    })
+    const renameInput = document.getElementById('rename-input')
+    const renameBtn = document.getElementById('rename-btn')
+    const renameModeSelect = document.getElementById('rename-mode')
+    const valueInput = document.getElementById('value-input')
+    const valueBtn = document.getElementById('value-btn')
 
-    document.getElementById('value-btn').addEventListener('click', () => {
-      const newValue = document.getElementById('value-input').value
-      if (!newValue && newValue !== '0') return
-      const types = [...selectedIds].map(id => {
-        const r = bulkResults.find(v => v.id === id)
-        return r ? r.resolvedType : 'STRING'
+    if (renameModeSelect) {
+      renameModeSelect.addEventListener('change', () => {
+        updateBulkActions()
       })
-      const resolvedType = types[0] || 'STRING'
-      parent.postMessage({ pluginMessage: {
-        type: 'bulk-set-value',
-        varIds: [...selectedIds],
-        newValue,
-        resolvedType,
-        resultIds: bulkResults.map(r => r.id)
-      } }, '*')
-    })
+    }
+
+    if (renameBtn) {
+      renameBtn.addEventListener('click', () => {
+        const newName = renameInput.value
+        if (!newName) return
+        const renameMode = (renameModeSelect?.value || 'replace').toLowerCase()
+        parent.postMessage({ pluginMessage: {
+          type: 'bulk-rename',
+          varIds: [...selectedIds],
+          newName,
+          renameMode,
+          query: lastQuery
+        } }, '*')
+      })
+    }
+
+    if (valueBtn) {
+      valueBtn.addEventListener('click', () => {
+        const newValue = valueInput.value
+        if (!newValue && newValue !== '0') return
+        const types = [...selectedIds].map(id => {
+          const r = bulkResults.find(v => v.id === id)
+          return r ? r.resolvedType : 'STRING'
+        })
+        const resolvedType = types[0] || 'STRING'
+        parent.postMessage({ pluginMessage: {
+          type: 'bulk-set-value',
+          varIds: [...selectedIds],
+          newValue,
+          resolvedType,
+          query: lastQuery
+        } }, '*')
+      })
+    }
+
+    if (renameInput) {
+      renameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          renameBtn.click()
+        }
+      })
+    }
+
+    if (valueInput) {
+      valueInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          valueBtn.click()
+        }
+      })
+    }
 
     let dedupSortCol = 'count'
     let dedupSortAsc = false
@@ -1282,7 +1411,7 @@
           const keepId = selections[gi]
           const group = sorted[gi]
           const aliasIds = group.variables.map(v => v.id).filter(id => id !== keepId)
-          parent.postMessage({ pluginMessage: { type: 'apply-alias', keepId, aliasIds } }, '*')
+          parent.postMessage({ pluginMessage: { type: 'apply-alias', keepId, aliasIds, query: lastQuery } }, '*')
         })
       })
 
@@ -1292,7 +1421,7 @@
           const group = sorted[gi]
           const aliasIds = group.variables.filter(v => v.isAlias).map(v => v.id)
           if (aliasIds.length > 0) {
-            parent.postMessage({ pluginMessage: { type: 'detach-all', varIds: aliasIds } }, '*')
+            parent.postMessage({ pluginMessage: { type: 'detach-all', varIds: aliasIds, query: lastQuery } }, '*')
           }
         })
       })
@@ -1301,7 +1430,7 @@
         btn.addEventListener('click', (e) => {
           e.stopPropagation()
           const varId = btn.getAttribute('data-var-id')
-          parent.postMessage({ pluginMessage: { type: 'detach-alias', varId } }, '*')
+          parent.postMessage({ pluginMessage: { type: 'detach-alias', varId, query: lastQuery } }, '*')
         })
       })
 
